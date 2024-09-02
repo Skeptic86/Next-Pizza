@@ -15,6 +15,7 @@ model User {
     email    String   @unique
     password String
     role     UserRole @default(USER)
+    verified DateTime?
 
     provider   String?
     providerId String?
@@ -35,7 +36,7 @@ model Product {
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
 
-    ingridients Ingredient[]
+    ingredients Ingredient[]
     items ProductItem[]
     
     category Category @relation(fields: [categoryId], references: [id])
