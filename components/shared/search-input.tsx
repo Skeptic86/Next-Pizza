@@ -3,9 +3,10 @@
 import React, { useRef, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Search } from 'lucide-react';
-import { useClickAway } from 'react-use';
+import { useClickAway, useDebounce } from 'react-use';
 import Link from 'next/link';
 import { Api } from '@/services/api-client';
+import { Product } from '@prisma/client';
 
 interface SearchInputProps {
     className?: string;
@@ -14,13 +15,29 @@ interface SearchInputProps {
 export const SearchInput: React.FC<SearchInputProps> = ({ className }) => {
     const [searchQuery, setSearchQuery] = useState('');
     const [focused, setFocused] = useState(false);
+    const [products, setProducts] = useState<Product[]>([]);
     const ref = useRef(null);
 
     useClickAway(ref, () => setFocused(false));
 
-    React.useEffect(() => {
-        Api.products.search(searchQuery);
-    }, [searchQuery]);
+    useDebounce(
+        async () => {
+            try {
+                const response = await Api.products.search(searchQuery);
+                setProducts(response);
+            } catch (error) {
+                console.log('error', error);
+            }
+        },
+        300,
+        [searchQuery],
+    );
+
+    const onClickItem = () => {
+        setProducts([]);
+        setFocused(false);
+        setSearchQuery('');
+    };
 
     return (
         <>
@@ -41,24 +58,30 @@ export const SearchInput: React.FC<SearchInputProps> = ({ className }) => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
 
-                <div
-                    className={cn(
-                        'absolute w-full bg-white rounded-xl py-2 top-14 shadow-md transition-all duration-200 invisible opacity-0 z-30',
-                        focused && 'visible opacity-100 top-12',
-                    )}>
-                    <Link
-                        className="flex items-center gap-3 px-3 py-2 hover:bg-primary/10"
-                        href="/product/1">
-                        <img
-                            className="rounded-sm h-8 w-8"
-                            src="https://media.dodostatic.net/image/r:233x233/11EEF9E43DC39C94AA5765DBF1C97100.avif"
-                            width={32}
-                            height={32}
-                            alt="Пицца 1"
-                        />
-                        <span>Пицца 1</span>
-                    </Link>
-                </div>
+                {products.length > 0 && (
+                    <div
+                        className={cn(
+                            'absolute w-full bg-white rounded-xl py-2 top-14 shadow-md transition-all duration-200 invisible opacity-0 z-30',
+                            focused && 'visible opacity-100 top-12',
+                        )}>
+                        {products.map((product) => (
+                            <Link
+                                key={product.id}
+                                onClick={onClickItem}
+                                className="flex items-center gap-3 px-3 py-2 hover:bg-primary/10"
+                                href={`/product/${product.id}`}>
+                                <img
+                                    className="rounded-sm h-8 w-8"
+                                    src={product.imageUrl}
+                                    width={32}
+                                    height={32}
+                                    alt={product.name}
+                                />
+                                <span>{product.name}</span>
+                            </Link>
+                        ))}
+                    </div>
+                )}
             </div>
         </>
     );
