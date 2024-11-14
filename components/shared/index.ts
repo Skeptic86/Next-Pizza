@@ -1,3 +1,4 @@
+export { ProductImage } from './product-image';
 export { SearchInput } from './search-input';
 export { FilterCheckbox } from './filter-checkbox';
 export { Categories } from './categories';
@@ -9,3 +10,5 @@ export { TopBar } from './top-bar';
 export { Filters } from './filters';
 export { RangeSlider } from './range-slider';
 export { CheckboxFiltersGroup } from './checkbox-filters-group';
+export { GroupVariants } from './group-variants';
+export * from './modals';
